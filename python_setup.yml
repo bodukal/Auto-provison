@@ -13,7 +13,7 @@
          name:
           - mysql-connector-python
           - psutil
-        executable: pip3
+      executable: pip3
 
     - name: Ensure the destination directory exists
       file:
