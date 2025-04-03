@@ -1,0 +1,24 @@
+- name: Install required Python packages
+  pip:
+    name:
+      - psutil
+      - mysql-connector-python
+    executable: pip3
+
+- name: Copy Python script
+  copy:
+    src: ../../../log_stats.py
+    dest: /opt/system_stats/log_stats.py
+
+- name: Create script directory
+  file:
+    path: /opt/system_stats
+    state: directory
+
+- name: Run system stats script (test)
+  command: python3 /opt/system_stats/log_stats.py
+  environment:
+    DB_HOST: "{{ mysql_host }}"
+    DB_USER: "{{ mysql_user }}"
+    DB_PASS: "{{ mysql_password }}"
+    DB_NAME: "{{ mysql_database }}"

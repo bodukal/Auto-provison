@@ -1,0 +1,41 @@
+---
+- name: Install MySQL and Configure Database
+  hosts: n2
+  become: yes
+  tasks:
+    - name: Install MySQL Server
+      yum:
+        name: mysql-server
+        state: present
+
+    - name: Start and enable MySQL service
+      service:
+        name: mysqld
+        state: started
+        enabled: yes
+
+    - name: Create syslogs database
+      mysql_db:
+        name: syslogs
+        state: present
+
+    - name: Create table for logging system stats
+      mysql_query:
+        login_user: root
+        login_password: "rootpassword"
+        query: |
+          CREATE TABLE IF NOT EXISTS stats (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            timestamp DATETIME NOT NULL,
+            cpu_usage FLOAT NOT NULL,
+            memory_usage FLOAT NOT NULL
+          );
+
+    - name: Create MySQL user for logging script
+      mysql_user:
+        name: devops
+        password: "password"
+        priv: "syslogs.*:ALL"
+        host: "%"
+        state: present
+...

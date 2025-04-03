@@ -1,0 +1,12 @@
+---
+- name: Schedule log_stats.py via cron
+  hosts: n3
+  become: yes
+  tasks:
+    - name: Add cron job
+      cron:
+        name: "Run log_stats.py every 5 minutes"
+        minute: "*/5"
+        job: "/usr/bin/python3 /var/www/html/log_stats.py"
+        user: ec2-user
+...
