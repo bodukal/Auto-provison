@@ -19,6 +19,6 @@
 
     - name: Copy Python logging script
       copy:
-        src: ../scripts/log_stats.py
+        src: .log_stats.py
         dest: /var/www/html/log_stats.py
 ...
