@@ -3,39 +3,31 @@
   hosts: n2
   become: yes
   tasks:
-    - name: Install MySQL Server
+    - name: Install MariaDB Server
       yum:
-        name: mysql-server
+        name: mariadb-server
         state: present
-
-    - name: Start and enable MySQL service
-      service:
-        name: mysqld
+    - name: Start and enable MariaDB service
+      systemd:
+        name: mariadb
         state: started
         enabled: yes
-
-    - name: Create syslogs database
+    - name: Ensure MySQL is running
+      service:
+        name: mariadb
+        state: started
+    - name: Create MySQL database and user
       mysql_db:
         name: syslogs
         state: present
-
-    - name: Create table for logging system stats
-      mysql_query:
-        login_user: root
-        login_password: "rootpassword"
-        query: |
-          CREATE TABLE IF NOT EXISTS stats (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            timestamp DATETIME NOT NULL,
-            cpu_usage FLOAT NOT NULL,
-            memory_usage FLOAT NOT NULL
-          );
-
-    - name: Create MySQL user for logging script
+    - name: Create MySQL user and grant privileges
       mysql_user:
         name: devops
-        password: "password"
-        priv: "syslogs.*:ALL"
-        host: "%"
+        password: password
+        priv: syslogs.*:ALL
         state: present
+    - name: Flush privileges
+      mysql_user:
+        name: devops
+        state: reloaded
 ...
