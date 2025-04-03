@@ -1,27 +1,23 @@
+---
 - name: Install Python and Deploy Logging Script
   hosts: n3
   become: yes
-  
   tasks:
     - name: Install Python and dependencies
       yum:
         name: python3
         state: present
-
     - name: Install required Python libraries
       pip:
-         name:
+        name:
           - mysql-connector-python
           - psutil
-      executable: pip3
-
+        executable: pip3
     - name: Ensure the destination directory exists
       file:
         path: /var/www/html
         state: directory
-
     - name: Copy Python logging script
       copy:
         src: .log_stats.py
         dest: /var/www/html/log_stats.py
-...
