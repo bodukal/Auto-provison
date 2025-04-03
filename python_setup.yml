@@ -1,5 +1,5 @@
 - name: Install Python and Deploy Logging Script
-  hosts: all
+  hosts: n3
   become: yes
   
   tasks:
@@ -22,6 +22,6 @@
 
     - name: Copy Python logging script
       copy:
-        src: ./scripts/log_stats.py  # Ensure this exists on your Ansible control node
+        src: .log_stats.py
         dest: /var/www/html/log_stats.py
 ...
