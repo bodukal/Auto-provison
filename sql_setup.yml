@@ -2,12 +2,13 @@
 - name: Install MySQL and Configure Database
   hosts: n2
   become: yes
+  
   tasks:
-    - name: Install MariaDB Server
+    - name: Install mariadb105-server
       yum:
         name: mariadb-server
         state: present
-    - name: Start and enable MariaDB service
+    - name: Start and enable mariadb105-server
       systemd:
         name: mariadb
         state: started
