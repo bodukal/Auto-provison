@@ -1,24 +1,27 @@
----
 - name: Install Python and Deploy Logging Script
-  hosts: n3
+  hosts: all
   become: yes
+  
   tasks:
     - name: Install Python and dependencies
       yum:
-        name:
-          - python3
-          - python3-pip
+        name: python3
         state: present
 
     - name: Install required Python libraries
       pip:
-        name:
-          - psutil
+         name:
           - mysql-connector-python
-        state: present
+          - psutil
+        executable: pip3
+
+    - name: Ensure the destination directory exists
+      file:
+        path: /var/www/html
+        state: directory
 
     - name: Copy Python logging script
       copy:
-        src: .log_stats.py
+        src: ./scripts/log_stats.py  # Ensure this exists on your Ansible control node
         dest: /var/www/html/log_stats.py
 ...
