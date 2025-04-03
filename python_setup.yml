@@ -19,5 +19,5 @@
         state: directory
     - name: Copy Python logging script
       copy:
-        src: .log_stats.py
+        src: /home/ec2-user/Auto-provison/log_stats.py
         dest: /var/www/html/log_stats.py
