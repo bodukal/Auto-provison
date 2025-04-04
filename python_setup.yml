@@ -1,6 +1,6 @@
 ---
 - name: Install Python and Deploy Logging Script
-  hosts: app
+  hosts: A1
   become: yes
   tasks:
     - name: Install Python and dependencies
