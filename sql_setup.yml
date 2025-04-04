@@ -59,6 +59,8 @@
         password: "{{ db_pass | default('password') }}"
         priv: "{{ db_name | default('syslogs') }}.*:ALL"
         state: present
+        login_user: root
+        login_password: admin123
 
     - name: Flush privileges
       community.mysql.mysql_user:
