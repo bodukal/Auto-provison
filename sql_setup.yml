@@ -58,6 +58,8 @@
         host: localhost
         password: admin123
         state: present
+        login_user: root
+        login_password: admin123
 
     - name: Create MySQL database
       community.mysql.mysql_db:
