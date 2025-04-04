@@ -74,6 +74,8 @@
         dest: /tmp/init_db.sql
 
     - name: Execute init_db.sql script
-      shell: "mysql -u {{ db_user | default('devops') }} -p{{ db_pass | default('password') }} {{ db_name | default('syslogs') }} < /tmp/init_db.sql"
-      args:
-        executable: /bin/bash
+      community.mysql.mysql_query:
+        login_user: "{{ db_user | default('devops') }}"
+        login_password: "{{ db_pass | default('password') }}"
+        query: "SOURCE /tmp/init_db.sql"
+        db: "{{ db_name | default('syslogs') }}"
