@@ -47,6 +47,12 @@
         name: mariadb
         state: started
 
+    - name: Set root password and authentication method
+      shell: |
+        mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'admin123'; FLUSH PRIVILEGES;"
+      args:
+        executable: /bin/bash
+
     - name: Create MySQL database
       community.mysql.mysql_db:
         name: "{{ db_name | default('syslogs') }}"
@@ -66,19 +72,20 @@
         login_host: localhost
 
     - name: Flush privileges
-      mysql_query:
+      community.mysql.mysql_query:
         query: "FLUSH PRIVILEGES;"
         login_user: root
         login_password: admin123
 
-    - name: Copy init_db.sql script
+    - name: Copy init_db.sql script to user directory
       copy:
         src: init_db.sql
-        dest: /tmp/init_db.sql
+        dest: /home/ec2-user/init_db.sql
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
 
     - name: Execute init_db.sql script
-      community.mysql.mysql_query:
-        query: "{{ lookup('file', '/tmp/init_db.sql') }}"
-        login_user: root
-        login_password: admin123
-        login_host: localhost
+      shell: "mysql -u root -padmin123 syslogs < /home/ec2-user/init_db.sql"
+      args:
+        chdir: "/home/ec2-user"
