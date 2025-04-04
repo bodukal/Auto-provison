@@ -1,5 +1,10 @@
-# ansible/roles/mysql/tasks/main.yml
+
 ---
+- name: Install MySQL and Configure Database
+  hosts: M1
+  become: yes
+
+  tasks:
 - name: Update package cache (yum)
   yum:
     update_cache: yes
@@ -52,7 +57,7 @@
 
 - name: Copy init_db.sql script
   copy:
-    src: init_db.sql  # Assuming init_db.sql is in the same directory as the playbook
+    src: init_db.sql 
     dest: /tmp/init_db.sql
 
 - name: Execute init_db.sql script
