@@ -16,8 +16,7 @@
     - name: Install MariaDB Server (Amazon Linux 2023)
       dnf:
         name:
-          - mariadb105
-          - mariadb105-server
+          - mariadb-server
         state: present
       when: ansible_distribution == 'Amazon' and ansible_distribution_major_version == "2023"
 
@@ -53,9 +52,9 @@
         state: started
 
     - name: Run mysql_secure_installation (non-interactive)
-      command: mysql_secure_installation --use-default --password={{ root_password }}
+      command: "mysql_secure_installation --use-default --set-root-password={{ root_password }}"
       args:
-        creates: /var/lib/mysql/mysql.sock  # Ensure the MySQL server is initialized
+        creates: /var/lib/mysql/mysql.sock
 
     - name: Set root password (MariaDB syntax)
       shell: |
