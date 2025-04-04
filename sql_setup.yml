@@ -1,6 +1,6 @@
 ---
 - name: Install MySQL and Configure Database
-  hosts: n2
+  hosts: mqsql
   become: yes
   
   tasks:
