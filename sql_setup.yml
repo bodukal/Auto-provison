@@ -51,7 +51,9 @@
       community.mysql.mysql_db:
         name: "{{ db_name | default('syslogs') }}"
         state: present
-      ignore_errors: yes
+        login_user: root
+        login_password: admin123
+        login_host: localhost
 
     - name: Create MySQL user and grant privileges
       community.mysql.mysql_user:
@@ -76,7 +78,7 @@
 
     - name: Execute init_db.sql script
       community.mysql.mysql_query:
-        login_user: "{{ db_user | default('devops') }}"
-        login_password: "{{ db_pass | default('password') }}"
-        query: "SOURCE /tmp/init_db.sql"
-        db: "{{ db_name | default('syslogs') }}"
+        query: "{{ lookup('file', '/tmp/init_db.sql') }}"
+        login_user: root
+        login_password: admin123
+        login_host: localhost
