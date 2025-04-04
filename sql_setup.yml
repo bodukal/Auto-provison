@@ -1,6 +1,11 @@
 - name: Install MySQL and Configure Database
   hosts: M1
   become: yes
+  vars:
+    root_password: admin123
+    db_name: syslogs
+    db_user: devops
+    db_pass: password
 
   tasks:
     - name: Update package cache (dnf)
@@ -49,33 +54,33 @@
 
     - name: Set root password (MariaDB syntax)
       shell: |
-         mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'admin123'; FLUSH PRIVILEGES;"
+        mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ root_password }}'; FLUSH PRIVILEGES;"
       args:
         executable: /bin/bash
 
     - name: Create MySQL database
       community.mysql.mysql_db:
-        name: "{{ db_name | default('syslogs') }}"
+        name: "{{ db_name }}"
         state: present
         login_user: root
-        login_password: admin123
+        login_password: "{{ root_password }}"
         login_host: localhost
 
     - name: Create MySQL user and grant privileges
       community.mysql.mysql_user:
-        name: "{{ db_user | default('devops') }}"
-        password: "{{ db_pass | default('password') }}"
-        priv: "{{ db_name | default('syslogs') }}.*:ALL"
+        name: "{{ db_user }}"
+        password: "{{ db_pass }}"
+        priv: "{{ db_name }}.*:ALL"
         state: present
         login_user: root
-        login_password: admin123
+        login_password: "{{ root_password }}"
         login_host: localhost
 
     - name: Flush privileges
       community.mysql.mysql_query:
         query: "FLUSH PRIVILEGES;"
         login_user: root
-        login_password: admin123
+        login_password: "{{ root_password }}"
 
     - name: Copy init_db.sql script to user directory
       copy:
@@ -86,6 +91,6 @@
         mode: '0644'
 
     - name: Execute init_db.sql script
-      shell: "mysql -u root -padmin123 syslogs < /home/ec2-user/init_db.sql"
+      shell: "mysql -u root -p{{ root_password }} {{ db_name }} < /home/ec2-user/init_db.sql"
       args:
         chdir: "/home/ec2-user"
