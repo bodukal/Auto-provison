@@ -64,9 +64,10 @@
         login_host: localhost
 
     - name: Flush privileges
-      community.mysql.mysql_user:
-        name: "{{ db_user | default('devops') }}"
-        state: reloaded
+      mysql_query:
+        query: "FLUSH PRIVILEGES;"
+        login_user: root
+        login_password: admin123
 
     - name: Copy init_db.sql script
       copy:
