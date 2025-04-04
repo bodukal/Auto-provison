@@ -1,5 +1,10 @@
 
 ---
+- name: Install MySQL and Configure Database
+  hosts: mysql  
+  become: yes
+  tasks:
+  
 - name: Update package cache (yum)
   yum:
     update_cache: yes
