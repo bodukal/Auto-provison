@@ -52,11 +52,12 @@
         name: mariadb
         state: started
 
-    - name: Set root password (MariaDB syntax)
-      shell: |
-        mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ root_password }}'; FLUSH PRIVILEGES;"
-      args:
-        executable: /bin/bash
+    - name: Change MySQL root password
+      mysql_user:
+        name: root
+        host: localhost
+        password: admin123
+        state: present
 
     - name: Create MySQL database
       community.mysql.mysql_db:
