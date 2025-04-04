@@ -61,6 +61,7 @@
         state: present
         login_user: root
         login_password: admin123
+        login_host: localhost
 
     - name: Flush privileges
       community.mysql.mysql_user:
