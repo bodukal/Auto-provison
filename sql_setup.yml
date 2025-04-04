@@ -47,11 +47,11 @@
         name: mariadb
         state: started
 
-    - name: Set root password and authentication method
+    - name: Set root password (MariaDB syntax)
       shell: |
-        mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'admin123'; FLUSH PRIVILEGES;"
+         mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'admin123'; FLUSH PRIVILEGES;"
       args:
-        executable: /bin/bash
+      executable: /bin/bash
 
     - name: Create MySQL database
       community.mysql.mysql_db:
