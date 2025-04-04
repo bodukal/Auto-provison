@@ -22,12 +22,20 @@
         state: present
       when: ansible_distribution != 'Amazon' or (ansible_distribution == 'Amazon' and ansible_distribution_major_version != "2023")
 
-
-    - name: Install PyMySQL for Ansible MySQL modules
+    - name: Install pip3 for Python 3
       dnf:
-        name: python3-PyMySQL
+        name: python3-pip
         state: present
-        
+
+    - name: Install PyMySQL using pip3
+      pip:
+        name: PyMySQL
+        executable: pip3
+
+    - name: Set Python interpreter for MySQL modules
+      set_fact:
+        ansible_python_interpreter: /usr/bin/python3
+
     - name: Start and enable MariaDB service
       systemd:
         name: mariadb
@@ -40,19 +48,20 @@
         state: started
 
     - name: Create MySQL database
-      mysql_db:
+      community.mysql.mysql_db:
         name: "{{ db_name | default('syslogs') }}"
         state: present
+      ignore_errors: yes
 
     - name: Create MySQL user and grant privileges
-      mysql_user:
+      community.mysql.mysql_user:
         name: "{{ db_user | default('devops') }}"
         password: "{{ db_pass | default('password') }}"
         priv: "{{ db_name | default('syslogs') }}.*:ALL"
         state: present
 
     - name: Flush privileges
-      mysql_user:
+      community.mysql.mysql_user:
         name: "{{ db_user | default('devops') }}"
         state: reloaded
 
@@ -62,8 +71,6 @@
         dest: /tmp/init_db.sql
 
     - name: Execute init_db.sql script
-      mysql_query:
-        login_user: "{{ db_user | default('devops') }}"
-        login_password: "{{ db_pass | default('password') }}"
-        query: "SOURCE /tmp/init_db.sql"
-        db: "{{ db_name | default('syslogs') }}"
+      shell: "mysql -u {{ db_user | default('devops') }} -p{{ db_pass | default('password') }} {{ db_name | default('syslogs') }} < /tmp/init_db.sql"
+      args:
+        executable: /bin/bash
