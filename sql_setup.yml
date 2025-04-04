@@ -1,61 +1,60 @@
-
 ---
 - name: Install MySQL and Configure Database
-  hosts: mysql  
+  hosts: mysql  # Assuming 'mysql' is the group for your MySQL server in hosts.ini
   become: yes
+
   tasks:
-  
-- name: Update package cache (yum)
-  yum:
-    update_cache: yes
-  when: ansible_pkg_mgr == 'yum'
+    - name: Update package cache (yum)
+      yum:
+        update_cache: yes
+      when: ansible_pkg_mgr == 'yum'
 
-- name: Update package cache (dnf)
-  dnf:
-    update_cache: yes
-  when: ansible_pkg_mgr == 'dnf'
+    - name: Update package cache (dnf)
+      dnf:
+        update_cache: yes
+      when: ansible_pkg_mgr == 'dnf'
 
-- name: Install MariaDB Server
-  package:
-    name: mariadb-server
-    state: present
+    - name: Install MariaDB Server
+      package:
+        name: mariadb-server
+        state: present
 
-- name: Start and enable MariaDB service
-  systemd:
-    name: mariadb
-    state: started
-    enabled: yes
+    - name: Start and enable MariaDB service
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
 
-- name: Ensure MySQL is running
-  service:
-    name: mariadb
-    state: started
+    - name: Ensure MySQL is running
+      service:
+        name: mariadb
+        state: started
 
-- name: Create MySQL database
-  mysql_db:
-    name: "{{ db_name | default('syslogs') }}"
-    state: present
+    - name: Create MySQL database
+      mysql_db:
+        name: "{{ db_name | default('syslogs') }}"
+        state: present
 
-- name: Create MySQL user and grant privileges
-  mysql_user:
-    name: "{{ db_user | default('devops') }}"
-    password: "{{ db_pass | default('password') }}"
-    priv: "{{ db_name | default('syslogs') }}.*:ALL"
-    state: present
+    - name: Create MySQL user and grant privileges
+      mysql_user:
+        name: "{{ db_user | default('devops') }}"
+        password: "{{ db_pass | default('password') }}"
+        priv: "{{ db_name | default('syslogs') }}.*:ALL"
+        state: present
 
-- name: Flush privileges
-  mysql_user:
-    name: "{{ db_user | default('devops') }}"
-    state: reloaded
+    - name: Flush privileges
+      mysql_user:
+        name: "{{ db_user | default('devops') }}"
+        state: reloaded
 
-- name: Copy init_db.sql script
-  copy:
-    src: ../../../init_db.sql
-    dest: /tmp/init_db.sql
+    - name: Copy init_db.sql script
+      copy:
+        src: init_db.sql  # Assuming init_db.sql is in the same directory or adjust path
+        dest: /tmp/init_db.sql
 
-- name: Execute init_db.sql script
-  mysql_query:
-    login_user: "{{ db_user | default('devops') }}"
-    login_password: "{{ db_pass | default('password') }}"
-    query: "SOURCE /tmp/init_db.sql"
-    db: "{{ db_name | default('syslogs') }}"
+    - name: Execute init_db.sql script
+      mysql_query:
+        login_user: "{{ db_user | default('devops') }}"
+        login_password: "{{ db_pass | default('password') }}"
+        query: "SOURCE /tmp/init_db.sql"
+        db: "{{ db_name | default('syslogs') }}"
