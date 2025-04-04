@@ -52,6 +52,11 @@
         name: mariadb
         state: started
 
+    - name: Run mysql_secure_installation (non-interactive)
+      command: mysql_secure_installation --use-default --password={{ root_password }}
+      args:
+        creates: /var/lib/mysql/mysql.sock  # Ensure the MySQL server is initialized
+
     - name: Set root password (MariaDB syntax)
       shell: |
         mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ root_password }}'; FLUSH PRIVILEGES;"
