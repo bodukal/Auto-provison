@@ -1,6 +1,6 @@
 ---
 - name: Install MySQL and Configure Database
-  hosts: mysql  # Assuming 'mysql' is the group for your MySQL server in hosts.ini
+  hosts: M1
   become: yes
 
   tasks:
@@ -49,7 +49,7 @@
 
     - name: Copy init_db.sql script
       copy:
-        src: init_db.sql  # Assuming init_db.sql is in the same directory or adjust path
+        src: init_db.sql 
         dest: /tmp/init_db.sql
 
     - name: Execute init_db.sql script
