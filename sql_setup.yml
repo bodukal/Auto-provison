@@ -4,6 +4,10 @@
   become: yes
 
   tasks:
+    - name: Enable MariaDB Repository (Amazon Linux Only)
+      command: amazon-linux-extras enable mariadb10.5
+      when: ansible_distribution == "Amazon"
+
     - name: Update package cache (yum)
       yum:
         update_cache: yes
@@ -17,6 +21,11 @@
     - name: Install MariaDB Server
       package:
         name: mariadb-server
+        state: present
+
+    - name: Install MySQL Python dependencies
+      package:
+        name: python3-PyMySQL
         state: present
 
     - name: Start and enable MariaDB service
@@ -34,27 +43,31 @@
       mysql_db:
         name: "{{ db_name | default('syslogs') }}"
         state: present
+      environment:
+        MYSQL_PWD: "{{ db_pass | default('password') }}"
 
     - name: Create MySQL user and grant privileges
       mysql_user:
         name: "{{ db_user | default('devops') }}"
         password: "{{ db_pass | default('password') }}"
         priv: "{{ db_name | default('syslogs') }}.*:ALL"
+        host: "%"
         state: present
+      environment:
+        MYSQL_PWD: "{{ db_pass | default('password') }}"
 
     - name: Flush privileges
-      mysql_user:
-        name: "{{ db_user | default('devops') }}"
-        state: reloaded
+      mysql_query:
+        login_user: root
+        login_password: "{{ db_pass | default('password') }}"
+        query: "FLUSH PRIVILEGES;"
+        db: "{{ db_name | default('syslogs') }}"
 
     - name: Copy init_db.sql script
       copy:
-        src: init_db.sql 
+        src: init_db.sql
         dest: /tmp/init_db.sql
 
     - name: Execute init_db.sql script
-      mysql_query:
-        login_user: "{{ db_user | default('devops') }}"
-        login_password: "{{ db_pass | default('password') }}"
-        query: "SOURCE /tmp/init_db.sql"
-        db: "{{ db_name | default('syslogs') }}"
+      shell: "mysql -u {{ db_user | default('devops') }} -p{{ db_pass | default('password') }} {{ db_name | default('syslogs') }} < /tmp/init_db.sql"
+...
