@@ -1,73 +1,64 @@
+# ansible/roles/mysql/tasks/main.yml
 ---
-- name: Install MySQL and Configure Database
-  hosts: M1
-  become: yes
+- name: Update package cache (yum)
+  yum:
+    update_cache: yes
+  when: ansible_pkg_mgr == 'yum'
 
-  tasks:
-    - name: Enable MariaDB Repository (Amazon Linux Only)
-      command: amazon-linux-extras enable mariadb10.5
-      when: ansible_distribution == "Amazon"
+- name: Update package cache (dnf)
+  dnf:
+    update_cache: yes
+  when: ansible_pkg_mgr == 'dnf'
 
-    - name: Update package cache (yum)
-      yum:
-        update_cache: yes
-      when: ansible_pkg_mgr == 'yum'
+- name: Install MariaDB Server (Amazon Linux 2)
+  package:
+    name: mariadb105-server
+    state: present
+  when: ansible_distribution == 'Amazon' and ansible_distribution_major_version == "2"
 
-    - name: Update package cache (dnf)
-      dnf:
-        update_cache: yes
-      when: ansible_pkg_mgr == 'dnf'
+- name: Install MariaDB Server (Other distributions)
+  package:
+    name: mariadb-server
+    state: present
+  when: ansible_distribution != 'Amazon' or (ansible_distribution == 'Amazon' and ansible_distribution_major_version != "2")
 
-    - name: Install MariaDB Server
-      package:
-        name: mariadb-server
-        state: present
+- name: Start and enable MariaDB service
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes
 
-    - name: Install MySQL Python dependencies
-      package:
-        name: python3-PyMySQL
-        state: present
+- name: Ensure MySQL is running
+  service:
+    name: mariadb
+    state: started
 
-    - name: Start and enable MariaDB service
-      systemd:
-        name: mariadb
-        state: started
-        enabled: yes
+- name: Create MySQL database
+  mysql_db:
+    name: "{{ db_name | default('syslogs') }}"
+    state: present
 
-    - name: Ensure MySQL is running
-      service:
-        name: mariadb
-        state: started
+- name: Create MySQL user and grant privileges
+  mysql_user:
+    name: "{{ db_user | default('devops') }}"
+    password: "{{ db_pass | default('password') }}"
+    priv: "{{ db_name | default('syslogs') }}.*:ALL"
+    state: present
 
-    - name: Create MySQL database
-      mysql_db:
-        name: "{{ db_name | default('syslogs') }}"
-        state: present
-      environment:
-        MYSQL_PWD: "{{ db_pass | default('password') }}"
+- name: Flush privileges
+  mysql_user:
+    name: "{{ db_user | default('devops') }}"
+    state: reloaded
 
-    - name: Create MySQL user and grant privileges
-      mysql_user:
-        name: "{{ db_user | default('devops') }}"
-        password: "{{ db_pass | default('password') }}"
-        priv: "{{ db_name | default('syslogs') }}.*:ALL"
-        host: "%"
-        state: present
-      environment:
-        MYSQL_PWD: "{{ db_pass | default('password') }}"
+- name: Copy init_db.sql script
+  copy:
+    src: init_db.sql  # Assuming init_db.sql is in the same directory as the playbook
+    dest: /tmp/init_db.sql
 
-    - name: Flush privileges
-      mysql_query:
-        login_user: root
-        login_password: "{{ db_pass | default('password') }}"
-        query: "FLUSH PRIVILEGES;"
-        db: "{{ db_name | default('syslogs') }}"
-
-    - name: Copy init_db.sql script
-      copy:
-        src: init_db.sql
-        dest: /tmp/init_db.sql
-
-    - name: Execute init_db.sql script
-      shell: "mysql -u {{ db_user | default('devops') }} -p{{ db_pass | default('password') }} {{ db_name | default('syslogs') }} < /tmp/init_db.sql"
+- name: Execute init_db.sql script
+  mysql_query:
+    login_user: "{{ db_user | default('devops') }}"
+    login_password: "{{ db_pass | default('password') }}"
+    query: "SOURCE /tmp/init_db.sql"
+    db: "{{ db_name | default('syslogs') }}"
 ...
