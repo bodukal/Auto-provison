@@ -1,5 +1,5 @@
 - name: Install MySQL and Configure Database
-  hosts: M1
+  hosts: mysqlserv
   become: yes
   vars:
     root_password: admin123
