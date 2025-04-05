@@ -1,6 +1,6 @@
 ---
 - name: Schedule log_stats.py via cron
-  hosts: n3
+  hosts: A1
   become: yes
   tasks:
     - name: Add cron job

@@ -1,0 +1,14 @@
+- name: Configure MySQL credentials on Jenkins node
+  hosts: J1
+  become: yes
+  tasks:
+    - name: Create .my.cnf for root MySQL access
+      copy:
+        dest: /root/.my.cnf
+        content: |
+          [client]
+          user=root
+          password=admin123
+        owner: root
+        group: root
+        mode: '0600'
