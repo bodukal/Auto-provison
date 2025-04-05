@@ -1,8 +1,12 @@
----
 - name: Schedule log_stats.py via cron
   hosts: A1
   become: yes
   tasks:
+    - name: Install cron package
+      package:
+        name: cronie
+        state: present
+
     - name: Add cron job
       cron:
         name: "Run log_stats.py every 5 minutes"
