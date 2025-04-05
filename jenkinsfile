@@ -1,66 +1,54 @@
 pipeline {
-    agent none  
+    agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // Jenkins credentials store
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+        ANSIBLE_HOST_KEY_CHECKING = 'False'
+        ANSIBLE_INVENTORY = '/home/ubuntu/Auto-provison/hosts.ini'  // Path to your hosts.ini file
     }
 
     stages {
-        stage('Provision EC2 Agents') {
-            agent {
-                label 'ubuntu'  // Use your Jenkins master to run this stage
-            }
+        stage('Clone Repo') {
             steps {
-                script {
-                    // Provision EC2 instance (use EC2 plugin)
-                    ec2_create_instance(
-                        ami: 'ami-xxxxxxxx',  // Specify the AMI
-                        region: 'us-west-1',  // Region
-                        instanceType: 't2.micro',
-                        keyPair: 'your-keypair-name',
-                        securityGroup: 'sg-xxxxxxxx',
-                        instanceCount: 1,
-                        subnetId: 'subnet-xxxxxxxx'
-                    )
-                }
+                // Clone the GitHub repository to get the latest project code
+                git 'https://github.com/bodukal/Auto-provison.git'
             }
         }
 
-        stage('Install Dependencies on EC2') {
-            agent {
-                label 'ubuntu'  // Jenkins master again
-            }
+        stage('Run SQL Setup') {
             steps {
-                script {
-                    // SSH to EC2 and run your Ansible playbook for Python and MySQL setup
-                    sh 'ansible-playbook -i inventory.ini setup_mysql_python.yml'
-                }
+                // Run the SQL setup playbook to install MySQL, create DB and table
+                sh '''ansible-playbook -i ${ANSIBLE_INVENTORY} sql_setup.yml'''
             }
         }
 
-        stage('Run Python Script') {
-            agent {
-                label 'ec2-agent'  // Target the EC2 instance as an agent
-            }
+        stage('Run Python Setup') {
             steps {
-                script {
-                    // Execute the Python script on the EC2 agent (every 5 minutes as set up)
-                    sh 'python3 /var/www/html/log_stats.py'
-                }
+                // Run Python setup playbook to install Python, dependencies, and copy the script
+                sh '''ansible-playbook -i ${ANSIBLE_INVENTORY} python_setup.yml'''
             }
         }
 
-        stage('Cleanup') {
-            agent {
-                label 'ubuntu'  // Jenkins master again
-            }
+        stage('Setup Cron Job') {
             steps {
-                script {
-                    // Cleanup tasks (like terminating EC2 instances if required)
-                    sh 'ansible-playbook -i inventory.ini cleanup.yml'
-                }
+                // Run the playbook to schedule the Python script using cron or systemd
+                sh '''ansible-playbook -i ${ANSIBLE_INVENTORY} cron_setup.yml'''
             }
+        }
+
+        stage('Archive and Upload Artifact') {
+            steps {
+                // Zip the Python script and configuration files
+                sh '''zip -r script.zip /path/to/log_stats.py /path/to/configs'''
+                // Upload the zipped artifact to S3 (or your preferred storage)
+                sh '''aws s3 cp script.zip s3://your-bucket-name/'''
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up or notification steps
+            echo 'Pipeline execution complete.'
         }
     }
 }
