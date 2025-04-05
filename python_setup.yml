@@ -3,24 +3,30 @@
   hosts: appserv
   become: yes
   tasks:
-    - name: Install Python3 and dependencies
+    - name: Update apt cache
       apt:
-        name: python3
-        state: present
-    - name: Install pip3
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Python and pip
       apt:
-        name: python3-pip
+        name:
+          - python3
+          - python3-pip
         state: present
+
     - name: Install required Python libraries
       pip:
         name:
           - psutil==5.9.0
           - mysql-connector-python==8.0.32
         executable: pip3
+
     - name: Ensure the destination directory exists
       file:
         path: /var/www/html
         state: directory
+
     - name: Copy Python logging script
       copy:
         src: /home/ec2-user/Auto-provison/log_stats.py
