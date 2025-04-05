@@ -4,7 +4,7 @@
   tasks:
     - name: Install cron package
       package:
-        name: cronie
+        name: cron
         state: present
 
     - name: Add cron job
@@ -12,5 +12,5 @@
         name: "Run log_stats.py every 5 minutes"
         minute: "*/5"
         job: "/usr/bin/python3 /var/www/html/log_stats.py"
-        user: ec2-user
+        user: ubuntu
 ...
