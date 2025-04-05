@@ -1,24 +1,30 @@
-- name: Install required Python packages
-  pip:
-    name:
-      - psutil
-      - mysql-connector-python
-    executable: pip3
+---
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
 
-- name: Copy Python script
-  copy:
-    src: ../../../log_stats.py
-    dest: /opt/system_stats/log_stats.py
+    - name: Install Python and pip
+      apt:
+        name:
+          - python3
+          - python3-pip
+        state: present
 
-- name: Create script directory
-  file:
-    path: /opt/system_stats
-    state: directory
+    - name: Install required Python libraries
+      pip:
+        name:
+          - psutil==5.9.0
+          - mysql-connector-python==8.0.32
+        executable: pip3
+        extra_args: --break-system-packages
 
-- name: Run system stats script (test)
-  command: python3 /opt/system_stats/log_stats.py
-  environment:
-    DB_HOST: "{{ mysql_host }}"
-    DB_USER: "{{ mysql_user }}"
-    DB_PASS: "{{ mysql_password }}"
-    DB_NAME: "{{ mysql_database }}"
+    - name: Ensure the destination directory exists
+      file:
+        path: /var/www/html
+        state: directory
+
+    - name: Copy Python logging script
+      copy:
+        src: /home/ec2-user/Auto-provison/log_stats.py
+        dest: /var/www/html/log_stats.py
