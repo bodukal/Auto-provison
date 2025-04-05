@@ -16,12 +16,12 @@
         state: present
 
     - name: Install required Python libraries
-      ansible.builtin.pip:
+      pip:
         name:
           - psutil==5.9.0
           - mysql-connector-python==8.0.32
         executable: pip3
-      extra_args: --break-system-packages
+        extra_args: --break-system-packages
 
     - name: Ensure the destination directory exists
       file:
