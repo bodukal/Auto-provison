@@ -1,5 +1,5 @@
 - name: Schedule log_stats.py via cron
-  hosts: A1
+  hosts: appserv
   become: yes
   tasks:
     - name: Install cron package
