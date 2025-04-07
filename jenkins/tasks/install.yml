@@ -1,15 +1,14 @@
-
----
 - name: Ensure Java is installed
   apt:
     name: openjdk-11-jre-headless
     state: present
   become: yes
 
-- name: Add Jenkins repository key
-  apt_key:
+- name: Download Jenkins repository key
+  get_url:
     url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
-    state: present
+    dest: /etc/apt/trusted.gpg.d/jenkins.gpg
+    mode: '0644'
   become: yes
 
 - name: Add Jenkins repository to sources list
@@ -43,5 +42,3 @@
     proto: tcp
   become: yes
   when: ansible_facts['distribution'] == "Ubuntu"
-
-  
