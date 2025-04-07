@@ -1,0 +1,6 @@
+---
+# site.yml - Master playbook for system monitoring deployment
+- name: Deploy MySQL and Python monitoring system
+  hosts: appserv  # This should match your inventory group
+  become: yes
+  

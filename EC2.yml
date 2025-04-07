@@ -1,0 +1,7 @@
+name: provisioning a new EC2 using Ansible playbook
+hosts: localhost
+connection: local 
+gather_facts: false
+tags: provisioning
+tasks:
+  roles: jenkins

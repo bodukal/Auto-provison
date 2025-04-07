@@ -2,3 +2,4 @@
 ---
 # tasks file for python
 - import_tasks: Install.yml
+- import_tasks: cron.yml

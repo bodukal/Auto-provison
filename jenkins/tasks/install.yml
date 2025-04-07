@@ -1,0 +1,138 @@
+tasks:
+    # MySQL Setup Tasks
+    - name: Update package cache (dnf)
+      dnf:
+        update_cache: yes
+      when: ansible_pkg_mgr == 'dnf'
+      
+    - name: Install MariaDB Server (Amazon Linux 2023)
+      dnf:
+        name:
+          - mariadb105
+          - mariadb105-server
+        state: present
+      when: ansible_distribution == 'Amazon' and ansible_distribution_major_version == "2023"
+      
+    - name: Install MariaDB Server (Other distributions)
+      package:
+        name: mariadb-server
+        state: present
+      when: ansible_distribution != 'Amazon' or (ansible_distribution == 'Amazon' and ansible_distribution_major_version != "2023")
+      
+    - name: Install pip3 for Python 3
+      dnf:
+        name: python3-pip
+        state: present
+        
+    - name: Install PyMySQL using pip3
+      pip:
+        name: PyMySQL
+        executable: pip3
+        
+    - name: Set Python interpreter for MySQL modules
+      set_fact:
+        ansible_python_interpreter: /usr/bin/python3
+        
+    - name: Start and enable MariaDB service
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
+        
+    - name: Ensure MySQL is running
+      service:
+        name: mariadb
+        state: started
+        
+    - name: Change MySQL root password
+      mysql_user:
+        name: root
+        host: localhost
+        password: "{{ root_password }}"
+        state: present
+        login_user: root
+        login_password: "{{ root_password }}"
+        
+    - name: Create MySQL database
+      community.mysql.mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_user: root
+        login_password: "{{ root_password }}"
+        login_host: localhost
+        
+    - name: Create MySQL user and grant privileges
+      community.mysql.mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_pass }}"
+        priv: "{{ db_name }}.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ root_password }}"
+        login_host: localhost
+        
+    - name: Flush privileges
+      community.mysql.mysql_query:
+        query: "FLUSH PRIVILEGES;"
+        login_user: root
+        login_password: "{{ root_password }}"
+        
+    - name: Copy init_db.sql script to user directory
+      copy:
+        src: init_db.sql
+        dest: /home/ec2-user/init_db.sql
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+        
+    - name: Execute init_db.sql script
+      shell: "mysql -u root -p{{ root_password }} {{ db_name }} < /home/ec2-user/init_db.sql"
+      args:
+        chdir: "/home/ec2-user"
+        
+    # Python Setup Tasks
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_pkg_mgr == 'apt'
+        
+    - name: Install Python and pip
+      apt:
+        name:
+          - python3
+          - python3-pip
+        state: present
+      when: ansible_pkg_mgr == 'apt'
+        
+    - name: Install required Python libraries
+      pip:
+        name:
+          - psutil==5.9.0
+          - mysql-connector-python==8.0.32
+        executable: pip3
+        extra_args: --break-system-packages
+        
+    - name: Ensure the destination directory exists
+      file:
+        path: /var/lib/mysql/syslogs
+        state: directory
+        
+    - name: Copy Python logging script
+      copy:
+        src: /home/ec2-user/Auto-provison/log_stats.py
+        dest: /var/lib/mysql/syslogs/log_stats.py
+        mode: '0755'
+        
+    # Cron Setup Tasks
+    - name: Install cron package
+      package:
+        name: cron
+        state: present
+        
+    - name: Add cron job
+      cron:
+        name: "Run log_stats.py every 5 minutes"
+        minute: "*/5"
+        job: "/usr/bin/python3 /var/lib/mysql/syslogs/log_stats.py"
+        user: ubuntu

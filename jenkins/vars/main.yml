@@ -1,3 +1,15 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # vars file for jenkins
+root_password: admin123
+db_name: syslogs
+db_user: devops
+db_pass: password
+
+keypair: saturday.pem
+instance_type: t2.micro
+ami_id: ami-084568db4383264d4
+instance_count: 1
+region: us-east-1 
+security_group: sg-0777eea2db89bf3b9
+jenkins_master_ip: 172.31.25.124
