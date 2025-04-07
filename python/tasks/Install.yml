@@ -21,10 +21,10 @@
 
     - name: Ensure the destination directory exists
       file:
-        path: /var/www/html
+        path: /var/lib/mysql/syslogs
         state: directory
 
     - name: Copy Python logging script
       copy:
         src: /home/ec2-user/Auto-provison/log_stats.py
-        dest: /var/www/html/log_stats.py
+        dest: /var/lib/mysql/syslogs/log_stats.py
