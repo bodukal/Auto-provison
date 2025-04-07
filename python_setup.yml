@@ -3,4 +3,4 @@
   hosts: appserv
   become: yes
   roles:  
-    -python
+    - python
