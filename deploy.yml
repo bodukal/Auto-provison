@@ -1,69 +1,28 @@
-# playbooks/site.yml
 ---
-- name: Install and Configure Jenkins on jenkinserv
+- name: Install and Configure Jenkins
   hosts: jenkinserv
   become: yes
   roles:
-    - common
     - jenkins
 
-- name: Provision Jenkins Agent on AWS (Run from jenkinserv or a control node)
-  hosts: jenkinserv  # Or another control node if not running from jenkinserv
+- name: Provision Jenkins Agent on AWS
+  hosts: jenkinserv
   become: false
   roles:
     - jenkins_agent
 
-- name: Install and Configure MySQL Server on mysqlserv
+- name: Install and Configure MySQL Server
   hosts: mysqlserv
   become: yes
   roles:
-    - common
     - mysql
 
-- name: Configure App Server for Python Script on appserv
+- name: Configure Python App Server
   hosts: appserv
   become: yes
   roles:
-    - common
-    - python_app
+    - python
 ...
 
 
 
----
-- name: Ensure Jenkins Agent security group exists with SSH access
-  community.aws.ec2_group:
-      name: "{{ security_group }}"
-      description: "Allow SSH from Jenkins master"
-      region: "{{ region }}"
-      rules:
-        - proto: tcp
-          from_port: 22
-          to_port: 22
-          cidr_ip: "{{ jenkins_master_ip }}/32"
-      rules_egress:
-        - proto: -1
-          from_port: 0
-          to_port: 0
-          cidr_ip: 0.0.0.0/0
-      state: present
-
-- name: Provision new EC2 instance for Jenkins Agent
-  community.aws.ec2_instance:
-      name: "jenkins-agent"
-      key_name: "{{ keypair }}"
-      instance_type: "{{ instance_type }}"
-      image_id: "{{ ami_id }}"
-      region: "{{ region }}"
-      count: "{{ instance_count }}"
-      wait: true
-      security_groups: [ "{{ security_group }}" ]
-      tags:
-        Name: "Jenkins-Agent"
-        Role: "jenkins-node"
-        CreatedBy: "Ansible"
-  register: ec2_result
-
-- name: Display Jenkins Agent public IP
-  debug:
-      msg: "New Jenkins agent launched at public IP: {{ ec2_result.instances[0].public_ip_address }}"

@@ -4,4 +4,4 @@ connection: local
 gather_facts: false
 tags: provisioning
 tasks:
-  roles: jenkins
+  roles: jenkins_agent

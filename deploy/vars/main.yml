@@ -1,2 +1,7 @@
 ---
 # vars file for deploy
+root_password: admin123
+db_name: syslogs
+db_user: devops
+db_pass: password
+
