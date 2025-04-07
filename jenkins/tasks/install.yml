@@ -1,0 +1,45 @@
+
+---
+- name: Ensure Java is installed
+  apt:
+    name: openjdk-11-jre-headless
+    state: present
+  become: yes
+
+- name: Add Jenkins repository key
+  apt_key:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+    state: present
+  become: yes
+
+- name: Add Jenkins repository to sources list
+  apt_repository:
+    repo: deb https://pkg.jenkins.io/debian-stable binary/
+    state: present
+  become: yes
+
+- name: Update apt package cache
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+  become: yes
+
+- name: Ensure Jenkins service is started and enabled
+  service:
+    name: jenkins
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Open Jenkins port in firewall (if UFW is active)
+  ufw:
+    rule: allow
+    port: 8080
+    proto: tcp
+  become: yes
+  when: ansible_facts['distribution'] == "Ubuntu"

@@ -1,0 +1,9 @@
+# roles/jenkins/tasks/main.yml
+---
+- name: Install and Configure Jenkins on jenkinserv
+  hosts: jenkinserv  
+  become: yes      
+
+  roles:
+    - install java 
+    - jenkins

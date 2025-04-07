@@ -1,3 +1,35 @@
+# playbooks/site.yml
+---
+- name: Install and Configure Jenkins on jenkinserv
+  hosts: jenkinserv
+  become: yes
+  roles:
+    - common
+    - jenkins
+
+- name: Provision Jenkins Agent on AWS (Run from jenkinserv or a control node)
+  hosts: jenkinserv  # Or another control node if not running from jenkinserv
+  become: false
+  roles:
+    - jenkins_agent
+
+- name: Install and Configure MySQL Server on mysqlserv
+  hosts: mysqlserv
+  become: yes
+  roles:
+    - common
+    - mysql
+
+- name: Configure App Server for Python Script on appserv
+  hosts: appserv
+  become: yes
+  roles:
+    - common
+    - python_app
+...
+
+
+
 ---
 - name: Ensure Jenkins Agent security group exists with SSH access
   community.aws.ec2_group:
@@ -35,5 +67,3 @@
 - name: Display Jenkins Agent public IP
   debug:
       msg: "New Jenkins agent launched at public IP: {{ ec2_result.instances[0].public_ip_address }}"
-
-...
