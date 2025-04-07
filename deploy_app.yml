@@ -1,0 +1,76 @@
+# playbooks/deploy_app.yml
+---
+- name: Deploy Python Application from S3
+  hosts: "{{ deploy_host | default('appserv') }}"
+  become: yes
+
+  vars:
+    artifact_remote_url: "{{ artifact_url }}"
+    artifact_local_path: /tmp/system-logger.zip
+    deploy_base_path: /opt/system-logger # Adjust the deployment base path as needed
+    app_user: ubuntu # Adjust the user to run the application
+    app_group: ubuntu # Adjust the group
+    python_executable: /usr/bin/python3 # Adjust if your Python 3 executable is different
+
+  tasks:
+    - name: Install unzip if not present
+      package:
+        name: unzip
+        state: present
+
+    - name: Download artifact from S3
+      get_url:
+        url: "{{ artifact_remote_url }}"
+        dest: "{{ artifact_local_path }}"
+        use_proxy: no
+      register: download_result
+      until: download_result is succeeded
+      retries: 3
+      delay: 5
+
+    - name: Ensure deployment directory exists
+      file:
+        path: "{{ deploy_base_path }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+    - name: Unzip the artifact
+      unarchive:
+        src: "{{ artifact_local_path }}"
+        dest: "{{ deploy_base_path }}"
+        remote_src: yes
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+
+    - name: Install necessary Python dependencies (if any - adjust as needed)
+      pip:
+        name:
+          - psutil
+          - PyMySQL
+        executable: "{{ python_executable }} -m pip"
+      become: yes
+      become_user: "{{ app_user }}"
+      when: install_python_deps | default(false) # Control with a variable
+
+    - name: Ensure Python script is executable
+      file:
+        path: "{{ deploy_base_path }}/log_stats.py" # Assuming your script is named log_stats.py
+        mode: '0755'
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+
+    - name: Set up cron job to run the script (adjust schedule as needed)
+      cron:
+        name: "Run system logger"
+        job: "{{ python_executable }} {{ deploy_base_path }}/log_stats.py >> {{ deploy_base_path }}/system.log 2>&1"
+        user: "{{ app_user }}"
+        minute: "*/5"
+      when: setup_cron | default(true) # Control with a variable
+
+    - name: Clean up the downloaded artifact
+      file:
+        path: "{{ artifact_local_path }}"
+        state: absent
+-
